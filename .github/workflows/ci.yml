@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Lint, migration check & tests
+    runs-on: ubuntu-latest
+    env:
+      SECRET_KEY: ci-not-secret
+      DEBUG: "true"
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+          cache: pip
+      - run: pip install -r requirements-dev.txt
+      - name: Lint (ruff)
+        run: ruff check .
+      - name: Migrations are up to date
+        run: python manage.py makemigrations --check --dry-run
+      - name: Django system check
+        run: python manage.py check
+      - name: Tests
+        run: pytest

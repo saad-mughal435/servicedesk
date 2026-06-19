@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Sign in - Service Desk{% endblock %}
+{% block content %}
+<div class="auth-card">
+  <h1>Sign in</h1>
+  <p class="muted">Internal IT service desk</p>
+
+  {% if demo_mode %}
+    <div class="demo-note">
+      <strong>Demo account</strong>: <code>agent</code> / <code>demo12345</code>.
+      Try also <code>manager</code> or <code>requester</code> (same password).
+      Deletes are disabled in this demo.
+    </div>
+  {% endif %}
+
+  <form method="post">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    <label for="id_username">Username</label>
+    <input type="text" name="username" id="id_username"
+           value="{% if demo_mode %}agent{% endif %}" autofocus required>
+    <label for="id_password">Password</label>
+    <input type="password" name="password" id="id_password"
+           value="{% if demo_mode %}demo12345{% endif %}" required>
+    <button type="submit" class="btn">Sign in</button>
+    <input type="hidden" name="next" value="{{ next }}">
+  </form>
+</div>
+{% endblock %}

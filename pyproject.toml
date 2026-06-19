@@ -1,0 +1,21 @@
+[project]
+name = "servicedesk"
+version = "1.0.0"
+description = "Internal IT service desk (ITSM) — Django + Django REST Framework"
+requires-python = ">=3.12"
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+extend-exclude = ["migrations"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["apps", "config"]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings"
+python_files = ["test_*.py", "tests.py", "*_test.py"]
+addopts = "-q"

@@ -1,0 +1,28 @@
+# Render blueprint. Create the Neon Postgres database separately and paste its
+# pooled connection string (with ?sslmode=require) into the DATABASE_URL env
+# var in the Render dashboard — it is marked sync:false so it is not stored here.
+services:
+  - type: web
+    name: servicedesk
+    runtime: python
+    plan: free
+    region: frankfurt
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn config.wsgi:application"
+    autoDeploy: true
+    healthCheckPath: /api/schema/
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.14.2"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: "false"
+      - key: DEMO_MODE
+        value: "true"
+      - key: DATABASE_URL
+        sync: false
+      - key: ALLOWED_HOSTS
+        value: servicedesk.onrender.com
+      - key: CSRF_TRUSTED_ORIGINS
+        value: https://servicedesk.onrender.com

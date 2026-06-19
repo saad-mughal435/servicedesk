@@ -1,0 +1,16 @@
+name: Bug report
+description: Report a problem with the service desk
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: Steps to reproduce, plus expected vs. actual behaviour.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version / commit
+      description: Release tag or commit SHA, if known.

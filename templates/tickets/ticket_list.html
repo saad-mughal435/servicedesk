@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Tickets - Service Desk{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Tickets</h1>
+  <a class="btn" href="{% url 'ticket-create' %}">New ticket</a>
+</div>
+
+<form method="get" class="filters">
+  <select name="status" onchange="this.form.submit()">
+    <option value="">All statuses</option>
+    {% for value, label in statuses %}
+      <option value="{{ value }}" {% if value == status_f %}selected{% endif %}>{{ label }}</option>
+    {% endfor %}
+  </select>
+  <select name="priority" onchange="this.form.submit()">
+    <option value="">All priorities</option>
+    {% for value, label in priorities %}
+      <option value="{{ value }}" {% if value == priority_f %}selected{% endif %}>{{ label }}</option>
+    {% endfor %}
+  </select>
+  <noscript><button type="submit" class="btn">Filter</button></noscript>
+</form>
+
+<table class="grid">
+  <thead>
+    <tr><th>Key</th><th>Title</th><th>Priority</th><th>Status</th><th>Assignee</th><th>SLA due</th></tr>
+  </thead>
+  <tbody>
+    {% for t in tickets %}
+      <tr>
+        <td><a href="{% url 'ticket-detail' t.key %}">{{ t.key }}</a></td>
+        <td>{{ t.title }}</td>
+        <td><span class="prio prio-{{ t.priority }}">{{ t.get_priority_display }}</span></td>
+        <td><span class="status status-{{ t.status }}">{{ t.get_status_display }}</span></td>
+        <td>{{ t.assignee.username|default:"—" }}</td>
+        <td>
+          {{ t.sla_due_at|date:"M j, H:i"|default:"—" }}
+          {% if t.sla_breached %}<span class="breach">breached</span>{% endif %}
+        </td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="6" class="muted">No tickets match.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

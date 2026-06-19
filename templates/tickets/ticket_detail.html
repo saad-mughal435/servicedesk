@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}{{ ticket.key }} - Service Desk{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>
+    <span class="key">{{ ticket.key }}</span> {{ ticket.title }}
+  </h1>
+  <a class="btn-link" href="{% url 'ticket-list' %}">&larr; All tickets</a>
+</div>
+
+<div class="badges">
+  <span class="prio prio-{{ ticket.priority }}">{{ ticket.get_priority_display }}</span>
+  <span class="status status-{{ ticket.status }}">{{ ticket.get_status_display }}</span>
+  <span class="tag">{{ ticket.get_ticket_type_display }}</span>
+  {% if ticket.sla_breached %}<span class="breach">SLA breached</span>{% endif %}
+</div>
+
+<div class="grid-2">
+  <section class="panel">
+    <h2>Details</h2>
+    <p class="desc">{{ ticket.description|linebreaksbr|default:"(no description)" }}</p>
+    <table class="kv">
+      <tr><th>Requester</th><td>{{ ticket.requester.username }}</td></tr>
+      <tr><th>Assignee</th><td>{{ ticket.assignee.username|default:"Unassigned" }}</td></tr>
+      <tr><th>Team</th><td>{{ ticket.team.name|default:"—" }}</td></tr>
+      <tr><th>Category</th><td>{{ ticket.category|default:"—" }}</td></tr>
+      <tr><th>Asset</th><td>{{ ticket.asset|default:"—" }}</td></tr>
+      <tr><th>SLA policy</th><td>{{ ticket.sla_policy.name|default:"—" }}</td></tr>
+      <tr><th>SLA due</th><td>{{ ticket.sla_due_at|date:"M j, Y H:i"|default:"—" }}</td></tr>
+      <tr><th>Created</th><td>{{ ticket.created_at|date:"M j, Y H:i" }}</td></tr>
+      {% if ticket.resolved_at %}<tr><th>Resolved</th><td>{{ ticket.resolved_at|date:"M j, Y H:i" }}</td></tr>{% endif %}
+    </table>
+
+    {% if is_agent %}
+      <form method="post" class="actions">
+        {% csrf_token %}
+        <button name="action" value="assign_me" class="btn">Assign to me</button>
+        {% if ticket.is_open %}
+          <button name="action" value="resolve" class="btn">Resolve</button>
+        {% else %}
+          <button name="action" value="reopen" class="btn">Reopen</button>
+        {% endif %}
+      </form>
+    {% endif %}
+  </section>
+
+  <section class="panel">
+    <h2>Activity</h2>
+    <ul class="timeline">
+      {% for e in events %}
+        <li>
+          <span class="verb">{{ e.get_verb_display }}</span>
+          {% if e.from_value %}<span class="muted">{{ e.from_value }} &rarr; {{ e.to_value }}</span>{% endif %}
+          <span class="muted">by {{ e.actor.username|default:"system" }} · {{ e.created_at|date:"M j, H:i" }}</span>
+        </li>
+      {% endfor %}
+    </ul>
+  </section>
+</div>
+
+<section class="panel">
+  <h2>Comments</h2>
+  {% for c in comments %}
+    <div class="comment{% if c.is_internal %} internal{% endif %}">
+      <div class="comment-head">
+        <strong>{{ c.author.username|default:"(removed)" }}</strong>
+        {% if c.is_internal %}<span class="tag">internal</span>{% endif %}
+        <span class="muted">{{ c.created_at|date:"M j, Y H:i" }}</span>
+      </div>
+      <p>{{ c.body|linebreaksbr }}</p>
+    </div>
+  {% empty %}
+    <p class="muted">No comments yet.</p>
+  {% endfor %}
+
+  <form method="post" class="comment-form">
+    {% csrf_token %}
+    {{ form.body }}
+    {% if is_agent %}
+      <label class="check">{{ form.is_internal }} Internal note (agents only)</label>
+    {% endif %}
+    <button name="action" value="comment" class="btn">Add comment</button>
+  </form>
+</section>
+{% endblock %}

@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - Service Desk{% endblock %}
+{% block content %}
+<h1>Dashboard</h1>
+
+<section class="cards">
+  <div class="card">
+    <span class="num">{{ total_open }}</span>
+    <span class="lbl">Open tickets</span>
+  </div>
+  <div class="card">
+    <span class="num">{{ high_priority }}</span>
+    <span class="lbl">Open P1 / P2</span>
+  </div>
+  <div class="card{% if breached %} danger{% endif %}">
+    <span class="num">{{ breached }}</span>
+    <span class="lbl">SLA breached</span>
+  </div>
+</section>
+
+<div class="grid-2">
+  <section class="panel">
+    <h2>Open by status</h2>
+    <table class="kv">
+      {% for label, count in by_status %}
+        <tr><th>{{ label }}</th><td>{{ count }}</td></tr>
+      {% endfor %}
+    </table>
+  </section>
+
+  <section class="panel">
+    <h2>My open tickets</h2>
+    {% if my_open %}
+      <ul class="ticket-mini">
+        {% for t in my_open %}
+          <li>
+            <a href="{% url 'ticket-detail' t.key %}">
+              <span class="prio prio-{{ t.priority }}">{{ t.get_priority_display }}</span>
+              <span class="key">{{ t.key }}</span> {{ t.title }}
+            </a>
+            {% if t.sla_breached %}<span class="breach">SLA</span>{% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="muted">Nothing assigned to you.</p>
+    {% endif %}
+  </section>
+</div>
+
+<section class="panel">
+  <h2>Recent tickets</h2>
+  <ul class="ticket-mini">
+    {% for t in recent %}
+      <li>
+        <a href="{% url 'ticket-detail' t.key %}">
+          <span class="status status-{{ t.status }}">{{ t.get_status_display }}</span>
+          <span class="key">{{ t.key }}</span> {{ t.title }}
+        </a>
+        <span class="muted">{{ t.created_at|date:"M j, H:i" }}</span>
+      </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endblock %}

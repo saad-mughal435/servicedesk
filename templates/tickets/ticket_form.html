@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}New ticket - Service Desk{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>New ticket</h1>
+  <a class="btn-link" href="{% url 'ticket-list' %}">&larr; All tickets</a>
+</div>
+
+<form method="post" class="panel form-stack">
+  {% csrf_token %}
+  {{ form.non_field_errors }}
+  {% for field in form %}
+    <div class="field">
+      <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+      {{ field }}
+      {{ field.errors }}
+    </div>
+  {% endfor %}
+  <button type="submit" class="btn">Create ticket</button>
+</form>
+{% endblock %}
