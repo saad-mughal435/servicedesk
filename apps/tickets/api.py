@@ -2,11 +2,15 @@
 
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema
 from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
+from apps.tickets.metrics import compute_metrics
 from apps.tickets.models import Category, Comment, Ticket, TicketEvent
 from apps.tickets.permissions import (
     DemoModeDeleteGuard,
@@ -201,3 +205,11 @@ class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Category.objects.filter(is_active=True)
     serializer_class = CategorySerializer
     pagination_class = None
+
+
+class MetricsView(APIView):
+    """Service-desk KPIs: SLA compliance, resolution time, volume, breakdowns."""
+
+    @extend_schema(responses=OpenApiTypes.OBJECT)
+    def get(self, request):
+        return Response(compute_metrics())

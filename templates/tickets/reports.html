@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}Reports - Service Desk{% endblock %}
+{% block content %}
+<h1>Reports &amp; analytics</h1>
+
+{{ metrics|json_script:"metrics-data" }}
+
+<section class="cards">
+  <div class="card">
+    <span class="num">{{ metrics.sla_compliance_pct }}%</span>
+    <span class="lbl">SLA compliance</span>
+  </div>
+  <div class="card">
+    <span class="num">{{ metrics.avg_resolution_hours }}h</span>
+    <span class="lbl">Avg resolution time</span>
+  </div>
+  <div class="card">
+    <span class="num">{{ metrics.totals.open }}</span>
+    <span class="lbl">Open tickets</span>
+  </div>
+  <div class="card{% if metrics.totals.breached %} danger{% endif %}">
+    <span class="num">{{ metrics.totals.breached }}</span>
+    <span class="lbl">SLA breached</span>
+  </div>
+</section>
+
+<section class="panel">
+  <h2>Ticket volume — last 14 days</h2>
+  <canvas id="volumeChart" height="90"></canvas>
+</section>
+
+<div class="grid-2">
+  <section class="panel">
+    <h2>By status</h2>
+    <canvas id="statusChart" height="170"></canvas>
+  </section>
+  <section class="panel">
+    <h2>Open by priority</h2>
+    <canvas id="priorityChart" height="170"></canvas>
+  </section>
+</div>
+
+<section class="panel">
+  <h2>Top categories</h2>
+  <canvas id="categoryChart" height="120"></canvas>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
+<script>
+  const m = JSON.parse(document.getElementById("metrics-data").textContent);
+  const ink = "#1f2733", grid = "rgba(31,39,51,.08)", brand = "#2f6df6";
+  Chart.defaults.color = "#6b7585";
+  Chart.defaults.font.family = "system-ui, sans-serif";
+
+  new Chart(document.getElementById("volumeChart"), {
+    type: "line",
+    data: {
+      labels: m.volume_14d.map(d => d.date.slice(5)),
+      datasets: [{
+        label: "Created", data: m.volume_14d.map(d => d.count),
+        borderColor: brand, backgroundColor: "rgba(47,109,246,.12)",
+        fill: true, tension: .3, pointRadius: 2,
+      }],
+    },
+    options: { plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true, grid: { color: grid } }, x: { grid: { display: false } } } },
+  });
+
+  new Chart(document.getElementById("statusChart"), {
+    type: "doughnut",
+    data: {
+      labels: m.by_status.map(s => s.label),
+      datasets: [{ data: m.by_status.map(s => s.count),
+        backgroundColor: ["#285bbd","#2257c4","#8a6500","#6b34c9","#1b7a52","#5b6776","#9aa3b1"] }],
+    },
+    options: { plugins: { legend: { position: "right" } } },
+  });
+
+  new Chart(document.getElementById("priorityChart"), {
+    type: "bar",
+    data: {
+      labels: m.by_priority.map(p => p.label),
+      datasets: [{ data: m.by_priority.map(p => p.count),
+        backgroundColor: ["#b3251c","#a85a06","#285bbd","#5b6776"] }],
+    },
+    options: { plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true, grid: { color: grid } }, x: { grid: { display: false } } } },
+  });
+
+  new Chart(document.getElementById("categoryChart"), {
+    type: "bar",
+    data: {
+      labels: m.top_categories.map(c => c.category),
+      datasets: [{ label: "Tickets", data: m.top_categories.map(c => c.count), backgroundColor: brand }],
+    },
+    options: { indexAxis: "y", plugins: { legend: { display: false } },
+      scales: { x: { beginAtZero: true, grid: { color: grid } }, y: { grid: { display: false } } } },
+  });
+</script>
+{% endblock %}

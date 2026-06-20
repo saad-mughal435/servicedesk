@@ -7,6 +7,7 @@ from django.utils import timezone
 
 from apps.tickets.choices import CLOSED_STATUSES, Priority, Status
 from apps.tickets.forms import CommentForm, TicketForm
+from apps.tickets.metrics import compute_metrics
 from apps.tickets.models import Ticket
 from apps.tickets.permissions import is_agent
 
@@ -106,6 +107,13 @@ def ticket_detail(request, key):
         "is_agent": user_is_agent,
     }
     return render(request, "tickets/ticket_detail.html", context)
+
+
+@login_required
+def reports(request):
+    if not is_agent(request.user):
+        return redirect("dashboard")
+    return render(request, "tickets/reports.html", {"metrics": compute_metrics()})
 
 
 @login_required
