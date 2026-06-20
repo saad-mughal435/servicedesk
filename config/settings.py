@@ -32,6 +32,19 @@ DEMO_MODE = env("DEMO_MODE")
 # the host's encrypted env, never in the repo.
 ANTHROPIC_API_KEY = env("ANTHROPIC_API_KEY", default="")
 ANTHROPIC_MODEL = env("ANTHROPIC_MODEL", default="claude-opus-4-8")
+
+# Email: console backend by default; real SMTP when EMAIL_HOST is configured.
+DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="servicedesk@example.com")
+_email_host = env("EMAIL_HOST", default="")
+if _email_host:
+    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+    EMAIL_HOST = _email_host
+    EMAIL_PORT = env.int("EMAIL_PORT", default=587)
+    EMAIL_HOST_USER = env("EMAIL_HOST_USER", default="")
+    EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default="")
+    EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=True)
+else:
+    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 ALLOWED_HOSTS = env("ALLOWED_HOSTS")
 CSRF_TRUSTED_ORIGINS = env("CSRF_TRUSTED_ORIGINS")
 
@@ -87,6 +100,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "apps.tickets.context_processors.demo_mode",
+                "apps.tickets.context_processors.unread_notifications",
             ],
         },
     },

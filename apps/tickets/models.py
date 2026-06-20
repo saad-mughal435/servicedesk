@@ -159,6 +159,8 @@ class Ticket(models.Model):
             actor=actor,
             to_value=user.get_username() if user else "",
         )
+        if user is not None and user != actor:
+            send_notification(user, self, f"You were assigned {self.key}: {self.title}")
 
     def change_status(self, new_status, *, actor=None):
         old = self.status
@@ -240,3 +242,46 @@ class TicketEvent(models.Model):
 
     def __str__(self) -> str:
         return f"{self.ticket.key}: {self.verb}"
+
+
+class Notification(models.Model):
+    """An in-app notification for a user (assignment, SLA breach, comment)."""
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="notifications",
+    )
+    ticket = models.ForeignKey(
+        Ticket,
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name="notifications",
+    )
+    text = models.CharField(max_length=255)
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self) -> str:
+        return f"To {self.user_id}: {self.text}"
+
+
+def send_notification(recipient, ticket, text, *, email=False):
+    """Create an in-app notification and optionally an email (best-effort)."""
+    if recipient is None:
+        return
+    Notification.objects.create(user=recipient, ticket=ticket, text=text)
+    if email and getattr(recipient, "email", ""):
+        from django.core.mail import send_mail
+
+        send_mail(
+            subject=(f"[{ticket.key}] {text}" if ticket else text),
+            message=text,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[recipient.email],
+            fail_silently=True,
+        )

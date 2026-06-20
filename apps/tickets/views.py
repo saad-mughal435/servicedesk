@@ -116,6 +116,13 @@ def ticket_detail(request, key):
 
 
 @login_required
+def notifications(request):
+    items = list(request.user.notifications.select_related("ticket")[:50])
+    request.user.notifications.filter(is_read=False).update(is_read=True)
+    return render(request, "tickets/notifications.html", {"items": items})
+
+
+@login_required
 def reports(request):
     if not is_agent(request.user):
         return redirect("dashboard")

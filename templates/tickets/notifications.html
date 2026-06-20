@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Alerts - Service Desk{% endblock %}
+{% block content %}
+<h1>Alerts</h1>
+<section class="panel">
+  <ul class="ticket-mini">
+    {% for n in items %}
+      <li>
+        {% if n.ticket %}
+          <a href="{% url 'ticket-detail' n.ticket.key %}">{{ n.text }}</a>
+        {% else %}
+          <span>{{ n.text }}</span>
+        {% endif %}
+        <span class="muted">{{ n.created_at|date:"M j, H:i" }}</span>
+      </li>
+    {% empty %}
+      <li class="muted">No alerts.</li>
+    {% endfor %}
+  </ul>
+</section>
+{% endblock %}

@@ -36,6 +36,7 @@ code { background: #eef1f7; padding: 1px 5px; border-radius: 4px; font-size: .9e
 .userbox { display: flex; align-items: center; gap: .7rem; font-size: .9rem; }
 .userbox .who { color: #aebbd2; }
 .btn-link { background: none; border: 0; color: #9fc0ff; cursor: pointer; font: inherit; padding: 0; }
+.badge { display: inline-block; background: var(--danger); color: #fff; border-radius: 999px; font-size: .7rem; font-weight: 700; padding: 0 .4em; }
 
 .container { max-width: 1000px; margin: 1.6rem auto; padding: 0 1.2rem; }
 

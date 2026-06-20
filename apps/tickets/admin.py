@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 from apps.tickets.choices import EventVerb, Priority, Status
-from apps.tickets.models import Category, Comment, Ticket, TicketEvent
+from apps.tickets.models import Category, Comment, Notification, Ticket, TicketEvent
 
 admin.site.site_header = "Service Desk administration"
 admin.site.site_title = "Service Desk"
@@ -133,6 +133,13 @@ class CommentAdmin(admin.ModelAdmin):
     search_fields = ("ticket__key", "body")
     readonly_fields = ("created_at",)
     autocomplete_fields = ("ticket", "author")
+
+
+@admin.register(Notification)
+class NotificationAdmin(admin.ModelAdmin):
+    list_display = ("user", "text", "is_read", "created_at")
+    list_filter = ("is_read",)
+    search_fields = ("user__username", "text")
 
 
 @admin.register(TicketEvent)
