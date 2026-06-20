@@ -11,6 +11,7 @@ from apps.tickets.forms import CommentForm, TicketForm
 from apps.tickets.metrics import compute_metrics
 from apps.tickets.models import Ticket
 from apps.tickets.permissions import is_agent
+from apps.tickets.search import search_tickets
 
 HIGH_PRIORITIES = [Priority.P1_CRITICAL, Priority.P2_HIGH]
 
@@ -54,16 +55,22 @@ def ticket_list(request):
     qs = visible_tickets(request.user)
     status_f = request.GET.get("status") or ""
     priority_f = request.GET.get("priority") or ""
+    q = request.GET.get("q") or ""
     if status_f:
         qs = qs.filter(status=status_f)
     if priority_f:
         qs = qs.filter(priority=priority_f)
+    if q:
+        qs = search_tickets(qs, q)
+    else:
+        qs = qs.order_by("-created_at")
     context = {
-        "tickets": qs.order_by("-created_at")[:200],
+        "tickets": qs[:200],
         "statuses": Status.choices,
         "priorities": Priority.choices,
         "status_f": status_f,
         "priority_f": priority_f,
+        "q": q,
     }
     return render(request, "tickets/ticket_list.html", context)
 

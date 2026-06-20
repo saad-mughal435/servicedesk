@@ -19,6 +19,7 @@ from apps.tickets.permissions import (
     IsManager,
     is_agent,
 )
+from apps.tickets.search import search_tickets
 
 User = get_user_model()
 
@@ -169,9 +170,12 @@ class TicketViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         qs = super().get_queryset()
-        if is_agent(self.request.user) or self.request.user.is_staff:
-            return qs
-        return qs.filter(requester=self.request.user)
+        if not (is_agent(self.request.user) or self.request.user.is_staff):
+            qs = qs.filter(requester=self.request.user)
+        q = self.request.query_params.get("q")
+        if q:
+            qs = search_tickets(qs, q)
+        return qs
 
     def perform_create(self, serializer):
         serializer.save(requester=self.request.user)

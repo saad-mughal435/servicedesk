@@ -7,6 +7,7 @@
 </div>
 
 <form method="get" class="filters">
+  <input type="search" name="q" value="{{ q }}" placeholder="Search title / description / key…">
   <select name="status" onchange="this.form.submit()">
     <option value="">All statuses</option>
     {% for value, label in statuses %}
