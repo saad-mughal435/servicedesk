@@ -4,7 +4,10 @@ An internal IT service desk (ITSM) built full-stack in **Django 6 + Django REST
 Framework**. Tickets move through a status workflow with SLA due dates and
 breach detection; every change is recorded on an audit timeline. It ships three
 surfaces over the same models: the **Django admin**, **server-rendered** pages,
-and a **DRF API** with an OpenAPI schema and Swagger UI.
+and a **DRF API** with an OpenAPI schema and Swagger UI. On top of that: an
+**analytics dashboard**, **AI triage & assist** (Anthropic Claude, with a
+deterministic mock fallback so it runs without a key), an **SLA escalation
+sweep**, and **in-app + email notifications**.
 
 [![CI](https://github.com/saad-mughal435/servicedesk/actions/workflows/ci.yml/badge.svg)](https://github.com/saad-mughal435/servicedesk/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-5eead4?style=flat-square)](LICENSE)
@@ -136,11 +139,27 @@ python manage.py check
 pytest
 ```
 
+## Run with Docker
+
+```bash
+docker compose up --build      # app on gunicorn + Postgres
+```
+
+Open http://localhost:8000 (`agent` / `demo12345`). Compose runs `migrate` +
+`seed` on boot. The `Dockerfile` is a multi-stage build that runs
+`collectstatic` and serves via gunicorn + WhiteNoise.
+
 ## Configuration
 
 Settings read the environment via `django-environ` (see `.env.example`):
 `SECRET_KEY`, `DEBUG`, `DEMO_MODE`, `ALLOWED_HOSTS`, `CSRF_TRUSTED_ORIGINS`,
 `DATABASE_URL`. Local/CI default to SQLite; production uses `DATABASE_URL`.
+
+- **AI assist** is live when `ANTHROPIC_API_KEY` is set (model via
+  `ANTHROPIC_MODEL`, default `claude-opus-4-8`); otherwise it falls back to a
+  deterministic mock. The key lives only in the host's encrypted env.
+- **Email** uses the console backend by default; set `EMAIL_HOST` (+
+  `EMAIL_PORT`/`EMAIL_HOST_USER`/`EMAIL_HOST_PASSWORD`) for real SMTP.
 
 - **`DEMO_MODE`** disables deletes for non-superusers (so a public demo can't be
   trashed) and pre-fills the demo credentials on the login page.
@@ -156,8 +175,10 @@ demo data on first boot. CI verifies; Render auto-deploys on push to `main`.
 
 Notes: Render's free instance sleeps after ~15 minutes idle (hence the cold
 start); use Neon's pooled connection string with `sslmode=require`; the free
-disk is ephemeral, so SQLite is never used in production. To periodically reset
-the demo, run `python manage.py seed --flush` (e.g. a scheduled job).
+disk is ephemeral, so SQLite is never used in production. Schedule
+`python manage.py sla_sweep` (e.g. a Render Cron Job) to flag breaches, escalate
+priority, and fire notifications. To periodically reset the demo, run
+`python manage.py seed --flush`.
 
 ## License
 
