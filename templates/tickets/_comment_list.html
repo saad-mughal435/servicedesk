@@ -1,0 +1,14 @@
+<div id="comment-list">
+  {% for c in comments %}
+    <div class="comment{% if c.is_internal %} internal{% endif %}">
+      <div class="comment-head">
+        <strong>{{ c.author.username|default:"(removed)" }}</strong>
+        {% if c.is_internal %}<span class="tag">internal</span>{% endif %}
+        <span class="muted">{{ c.created_at|date:"M j, Y H:i" }}</span>
+      </div>
+      <p>{{ c.body|linebreaksbr }}</p>
+    </div>
+  {% empty %}
+    <p class="muted">No comments yet.</p>
+  {% endfor %}
+</div>

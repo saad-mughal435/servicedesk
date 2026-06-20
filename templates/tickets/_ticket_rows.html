@@ -1,0 +1,20 @@
+<tbody id="ticket-rows"
+       hx-get="{% url 'ticket-list' %}?q={{ q|urlencode }}&status={{ status_f|urlencode }}&priority={{ priority_f|urlencode }}"
+       hx-trigger="every 10s"
+       hx-swap="outerHTML">
+  {% for t in tickets %}
+    <tr>
+      <td><a href="{% url 'ticket-detail' t.key %}">{{ t.key }}</a></td>
+      <td>{{ t.title }}</td>
+      <td><span class="prio prio-{{ t.priority }}">{{ t.get_priority_display }}</span></td>
+      <td><span class="status status-{{ t.status }}">{{ t.get_status_display }}</span></td>
+      <td>{{ t.assignee.username|default:"—" }}</td>
+      <td>
+        {{ t.sla_due_at|date:"M j, H:i"|default:"—" }}
+        {% if t.sla_breached %}<span class="breach">breached</span>{% endif %}
+      </td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="6" class="muted">No tickets match.</td></tr>
+  {% endfor %}
+</tbody>

@@ -72,7 +72,12 @@ def ticket_list(request):
         "priority_f": priority_f,
         "q": q,
     }
-    return render(request, "tickets/ticket_list.html", context)
+    template = (
+        "tickets/_ticket_rows.html"
+        if request.headers.get("HX-Request")
+        else "tickets/ticket_list.html"
+    )
+    return render(request, template, context)
 
 
 @login_required
@@ -93,6 +98,15 @@ def ticket_detail(request, key):
                 if not user_is_agent:
                     comment.is_internal = False
                 comment.save()
+                if request.headers.get("HX-Request"):
+                    comments = ticket.comments.select_related("author")
+                    if not user_is_agent:
+                        comments = comments.filter(is_internal=False)
+                    return render(
+                        request,
+                        "tickets/_comment_list.html",
+                        {"comments": comments, "is_agent": user_is_agent},
+                    )
                 return redirect("ticket-detail", key=ticket.key)
         elif user_is_agent and intent == "assign_me":
             ticket.assign_to(request.user, actor=request.user)

@@ -80,20 +80,13 @@
 
 <section class="panel">
   <h2>Comments</h2>
-  {% for c in comments %}
-    <div class="comment{% if c.is_internal %} internal{% endif %}">
-      <div class="comment-head">
-        <strong>{{ c.author.username|default:"(removed)" }}</strong>
-        {% if c.is_internal %}<span class="tag">internal</span>{% endif %}
-        <span class="muted">{{ c.created_at|date:"M j, Y H:i" }}</span>
-      </div>
-      <p>{{ c.body|linebreaksbr }}</p>
-    </div>
-  {% empty %}
-    <p class="muted">No comments yet.</p>
-  {% endfor %}
+  {% include "tickets/_comment_list.html" %}
 
-  <form method="post" class="comment-form">
+  <form method="post" class="comment-form"
+        hx-post="{% url 'ticket-detail' ticket.key %}"
+        hx-target="#comment-list"
+        hx-swap="outerHTML"
+        hx-on::after-request="this.reset()">
     {% csrf_token %}
     {{ form.body }}
     {% if is_agent %}
