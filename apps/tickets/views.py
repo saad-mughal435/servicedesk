@@ -5,6 +5,7 @@ from django.db.models import Count
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
+from apps.tickets.ai import draft_reply, summarize_ticket
 from apps.tickets.choices import CLOSED_STATUSES, Priority, Status
 from apps.tickets.forms import CommentForm, TicketForm
 from apps.tickets.metrics import compute_metrics
@@ -71,6 +72,8 @@ def ticket_list(request):
 def ticket_detail(request, key):
     ticket = get_object_or_404(visible_tickets(request.user), key=key)
     user_is_agent = is_agent(request.user)
+    form = CommentForm()
+    ai_result = None
 
     if request.method == "POST":
         intent = request.POST.get("action")
@@ -93,8 +96,10 @@ def ticket_detail(request, key):
         elif user_is_agent and intent == "reopen":
             ticket.reopen(actor=request.user)
             return redirect("ticket-detail", key=ticket.key)
-    else:
-        form = CommentForm()
+        elif user_is_agent and intent == "ai_summary":
+            ai_result = {"kind": "Summary", **summarize_ticket(ticket)}
+        elif user_is_agent and intent == "ai_draft":
+            ai_result = {"kind": "Draft reply", **draft_reply(ticket)}
 
     comments = ticket.comments.select_related("author")
     if not user_is_agent:
@@ -105,6 +110,7 @@ def ticket_detail(request, key):
         "comments": comments,
         "events": ticket.events.select_related("actor"),
         "is_agent": user_is_agent,
+        "ai_result": ai_result,
     }
     return render(request, "tickets/ticket_detail.html", context)
 

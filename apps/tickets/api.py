@@ -10,6 +10,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from apps.tickets.ai import draft_reply, suggest_triage, summarize_ticket
 from apps.tickets.metrics import compute_metrics
 from apps.tickets.models import Category, Comment, Ticket, TicketEvent
 from apps.tickets.permissions import (
@@ -150,7 +151,17 @@ class TicketViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         perms = [IsAuthenticated, DemoModeDeleteGuard]
-        if self.action in ("update", "partial_update", "assign", "resolve", "reopen"):
+        agent_actions = (
+            "update",
+            "partial_update",
+            "assign",
+            "resolve",
+            "reopen",
+            "ai_triage",
+            "ai_summarize",
+            "ai_draft",
+        )
+        if self.action in agent_actions:
             perms.append(IsAgent)
         elif self.action == "destroy":
             perms.append(IsManager)
@@ -200,6 +211,24 @@ class TicketViewSet(viewsets.ModelViewSet):
         ticket.reopen(actor=request.user)
         return Response(self.get_serializer(ticket).data)
 
+    @extend_schema(request=None, responses=OpenApiTypes.OBJECT)
+    @action(detail=True, methods=["post"], url_path="ai/triage")
+    def ai_triage(self, request, pk=None):
+        ticket = self.get_object()
+        return Response(suggest_triage(ticket.title, ticket.description))
+
+    @extend_schema(request=None, responses=OpenApiTypes.OBJECT)
+    @action(detail=True, methods=["post"], url_path="ai/summarize")
+    def ai_summarize(self, request, pk=None):
+        ticket = self.get_object()
+        return Response(summarize_ticket(ticket))
+
+    @extend_schema(request=None, responses=OpenApiTypes.OBJECT)
+    @action(detail=True, methods=["post"], url_path="ai/draft-reply")
+    def ai_draft(self, request, pk=None):
+        ticket = self.get_object()
+        return Response(draft_reply(ticket))
+
 
 class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Category.objects.filter(is_active=True)
@@ -213,3 +242,13 @@ class MetricsView(APIView):
     @extend_schema(responses=OpenApiTypes.OBJECT)
     def get(self, request):
         return Response(compute_metrics())
+
+
+class AiTriageView(APIView):
+    """Suggest a category + priority for free-text ticket details (no ticket yet)."""
+
+    @extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT)
+    def post(self, request):
+        title = request.data.get("title", "")
+        description = request.data.get("description", "")
+        return Response(suggest_triage(title, description))

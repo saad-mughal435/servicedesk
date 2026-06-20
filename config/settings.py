@@ -26,6 +26,12 @@ environ.Env.read_env(BASE_DIR / ".env")
 SECRET_KEY = env("SECRET_KEY", default="django-insecure-dev-only-change-me")
 DEBUG = env("DEBUG")
 DEMO_MODE = env("DEMO_MODE")
+
+# AI triage/assist. When ANTHROPIC_API_KEY is unset, the AI features fall back
+# to a deterministic mock so the demo works without a key. The value lives in
+# the host's encrypted env, never in the repo.
+ANTHROPIC_API_KEY = env("ANTHROPIC_API_KEY", default="")
+ANTHROPIC_MODEL = env("ANTHROPIC_MODEL", default="claude-opus-4-8")
 ALLOWED_HOSTS = env("ALLOWED_HOSTS")
 CSRF_TRUSTED_ORIGINS = env("CSRF_TRUSTED_ORIGINS")
 

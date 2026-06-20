@@ -22,7 +22,7 @@ from rest_framework.routers import DefaultRouter
 from apps.accounts.api import TeamViewSet
 from apps.assets.api import AssetViewSet
 from apps.sla.api import SlaPolicyViewSet
-from apps.tickets.api import CategoryViewSet, MetricsView, TicketViewSet
+from apps.tickets.api import AiTriageView, CategoryViewSet, MetricsView, TicketViewSet
 from config.views import healthz, readyz
 
 router = DefaultRouter()
@@ -38,6 +38,7 @@ urlpatterns = [
     path("readyz", readyz, name="readyz"),
     path("api/auth/token/", obtain_auth_token, name="api-token"),
     path("api/metrics/", MetricsView.as_view(), name="metrics"),
+    path("api/ai/triage/", AiTriageView.as_view(), name="ai-triage"),
     path("api/", include(router.urls)),
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path(
