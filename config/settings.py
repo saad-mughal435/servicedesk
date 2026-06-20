@@ -29,6 +29,13 @@ DEMO_MODE = env("DEMO_MODE")
 ALLOWED_HOSTS = env("ALLOWED_HOSTS")
 CSRF_TRUSTED_ORIGINS = env("CSRF_TRUSTED_ORIGINS")
 
+# Render injects the assigned hostname (which may carry a unique suffix);
+# trust it automatically so the deploy works regardless of the final URL.
+_render_host = env("RENDER_EXTERNAL_HOSTNAME", default="")
+if _render_host:
+    ALLOWED_HOSTS.append(_render_host)
+    CSRF_TRUSTED_ORIGINS.append(f"https://{_render_host}")
+
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
